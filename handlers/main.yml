@@ -1,2 +1,12 @@
 ---
 # handlers file for Nainterceptor.dibbler
+- name: "Restart dibbler"
+  service:
+    name: dibbler.service
+    state: restarted
+
+- name: "Enable dibbler"
+  service:
+    name: dibbler.service
+    state: started
+    enabled: yes

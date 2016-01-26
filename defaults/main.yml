@@ -1,2 +1,5 @@
 ---
 # defaults file for Nainterceptor.dibbler
+dibbler_version: 1.0.1
+dibbler_iface: eth0
+dibbler_duid: null

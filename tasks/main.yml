@@ -1,2 +1,45 @@
 ---
 # tasks file for Nainterceptor.dibbler
+- name: Creates Dibbler lib directory
+  file: path=/var/lib/dibbler state=directory recurse=yes
+
+- name: Creates Dibbler etc directory
+  file: path=/etc/dibbler state=directory recurse=yes
+
+- name: Test Dibbler version exists
+  template: src=../files/dibbler-version-installed.j2 dest=/etc/dibbler/dibbler-version-installed
+  register: dibbler_exists
+
+- name: Download Dibbler
+  get_url: >
+    url=http://klub.com.pl/dhcpv6/dibbler/dibbler-{{ dibbler_version }}.tar.gz
+    dest=/tmp
+  when: dibbler_exists.changed
+
+- name: Untar Dibbler
+  command: chdir=/tmp creates=dibbler-1.0.1 tar -xzf dibbler-{{ dibbler_version }}.tar.gz
+  when: dibbler_exists.changed
+
+- name: Configure Dibbler
+  command: chdir=/tmp/dibbler-{{ dibbler_version }} ./configure
+  when: dibbler_exists.changed
+
+- name: Make Dibbler
+  command: chdir=/tmp/dibbler-{{ dibbler_version }} make install clean
+  when: dibbler_exists.changed
+
+- name: Clean Dibbler temp dir
+  command: rm -rf /tmp/dibbler-{{ dibbler_version }} /tmp/dibbler-{{ dibbler_version }}.tar.gz
+  when: dibbler_exists.changed
+
+- name: Copy DUID
+  copy: content="{{ dibbler_duid }}" dest=/var/lib/dibbler/client-duid
+
+- name: Copy dibbler config
+  template: src=../files/dibbler-client.conf.j2 dest=/etc/dibbler/client.conf
+
+- name: Copy dibbler init.d script
+  copy: src=../files/dibbler.service dest=/etc/systemd/system/dibbler.service
+  notify:
+    - Restart dibbler
+    - Enable dibbler
